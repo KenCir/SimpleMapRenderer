@@ -30,92 +30,95 @@ namespace alvin0319\SimpleMapRenderer;
 
 use alvin0319\SimpleMapRenderer\data\MapData;
 use alvin0319\SimpleMapRenderer\item\FilledMap;
+use pocketmine\color\Color;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerItemHeldEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
-use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\ClientboundMapItemDataPacket;
 use pocketmine\network\mcpe\protocol\MapInfoRequestPacket;
 use pocketmine\network\mcpe\protocol\types\MapDecoration;
-use pocketmine\Player;
-use pocketmine\utils\Color;
-
+use pocketmine\network\mcpe\protocol\types\MapImage;
+use pocketmine\player\Player;
 use function count;
 
-class EventListener implements Listener{
+class EventListener implements Listener
+{
 
-	public function onDataPacketReceived(DataPacketReceiveEvent $event) : void{
-		$packet = $event->getPacket();
-		$player = $event->getPlayer();
-		if($packet instanceof MapInfoRequestPacket){
-			$mapId = $packet->mapId;
-			if(($mapData = MapFactory::getInstance()->getMapData($mapId)) !== null){
-				$event->setCancelled();
-				$this->sendMapInfo($player, $mapId, $mapData);
-			}
-		}
-	}
+    public function onDataPacketReceived(DataPacketReceiveEvent $event): void
+    {
+        $packet = $event->getPacket();
+        $player = $event->getOrigin()->getPlayer();
+        if ($packet instanceof MapInfoRequestPacket) {
+            $mapId = $packet->mapId;
+            if (($mapData = MapFactory::getInstance()->getMapData($mapId)) !== null) {
+                $event->cancel();
+                $this->sendMapInfo($player, $mapId, $mapData);
+            }
+        }
+    }
 
-	public function sendMapInfo(Player $player, int $mapId, MapData $mapData, array $includePlayers = []) : void{
-		$pk = new ClientboundMapItemDataPacket();
-		$pk->mapId = $mapId;
-		$pk->colors = $mapData->getColors();
-		if(count($includePlayers) > 0){
-			if($mapData->getDisplayPlayers()){
-				/**
-				 * @var int     $playerId
-				 */
-				foreach($includePlayers as $playerId){
-					/** @var Player $target */
-					$target = $player->getServer()->findEntity($playerId);
-					$pk->decorations[] = $this->getMapDecoration($mapData, $target);
-				}
-			}
-		}
-		$pk->type = ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE;
-		$pk->width = $pk->height = 128;
-		$pk->scale = 1;
-		$player->sendDataPacket($pk);
-	}
+    public function sendMapInfo(Player $player, int $mapId, MapData $mapData, array $includePlayers = []): void
+    {
+        $pk = new ClientboundMapItemDataPacket();
+        $pk->mapId = $mapId;
+        $pk->colors = new MapImage($mapData->getColors());
+        if (count($includePlayers) > 0) {
+            if ($mapData->getDisplayPlayers()) {
+                /**
+                 * @var int $playerId
+                 */
+                foreach ($includePlayers as $playerId) {
+                    /** @var Player $target */
+                    $target = $player->getServer()->getWorldManager()->findEntity($playerId);
+                    $pk->decorations[] = $this->getMapDecoration($mapData, $target);
+                }
+            }
+        }
+        $pk->type = ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE;
+        $pk->scale = 1;
+        $player->getNetworkSession()->sendDataPacket($pk);
+    }
 
-	public function onPlayerItemHeld(PlayerItemHeldEvent $event) : void{
-		$item = $event->getItem();
-		$player = $event->getPlayer();
-		if($item instanceof FilledMap){
-			$mapData = MapFactory::getInstance()->getMapData($item->getMapId());
-			if($mapData instanceof MapData){
-				$this->sendMapInfo($player, $mapData->getMapId(), $mapData);
-			}
-		}
-	}
+    public function onPlayerItemHeld(PlayerItemHeldEvent $event): void
+    {
+        $item = $event->getItem();
+        $player = $event->getPlayer();
+        if ($item instanceof FilledMap) {
+            $mapData = MapFactory::getInstance()->getMapData($item->getMapId());
+            if ($mapData instanceof MapData) {
+                $this->sendMapInfo($player, $mapData->getMapId(), $mapData);
+            }
+        }
+    }
 
-	private function getMapDecoration(MapData $data, Player $player) : MapDecoration{
-		$rotation = $player->getYaw();
+    private function getMapDecoration(MapData $data, Player $player): MapDecoration
+    {
+        $rotation = $player->getLocation()->getYaw();
 
-		$i = 1 << 0;
-		$f = ($player->getFloorX() - $data->getCenter()->getX()) / $i;
-		$f1 = ($player->getFloorZ() - $data->getCenter()->getZ()) / $i;
-		$b0 = (int) (($f * 2.0) + 0.5);
-		$b1 = (int) (($f1 * 2.0) + 0.5);
-		$j = 63;
+        $i = 1 << 0;
+        $f = ($player->getPosition()->getFloorX() - $data->getCenter()->getX()) / $i;
+        $f1 = ($player->getPosition()->getFloorZ() - $data->getCenter()->getZ()) / $i;
+        $b0 = (int)(($f * 2.0) + 0.5);
+        $b1 = (int)(($f1 * 2.0) + 0.5);
+        $j = 63;
 
-		$rotation = $rotation + ($rotation < 0.0 ? -8.0 : 8.0);
-		$b2 = ((int) ($rotation * 16.0 / 360.0));
+        $rotation = $rotation + ($rotation < 0.0 ? -8.0 : 8.0);
+        $b2 = ((int)($rotation * 16.0 / 360.0));
 
-		if($f <= -$j){
-			$b0 = (int) (($j * 2) + 2.5);
-		}
+        if ($f <= -$j) {
+            $b0 = (int)(($j * 2) + 2.5);
+        }
 
-		if($f1 <= -$j){
-			$b1 = (int) (($j * 2) + 2.5);
-		}
+        if ($f1 <= -$j) {
+            $b1 = (int)(($j * 2) + 2.5);
+        }
 
-		if($f >= $j){
-			$b0 = (int) ($j * 2 + 1);
-		}
-		if($f1 >= $j){
-			$b1 = (int) ($j * 2 + 1);
-		}
-		return new MapDecoration(0, $b2, $b0, $b1, $player->getName(), $color ?? new Color(255, 255, 255));
-	}
+        if ($f >= $j) {
+            $b0 = (int)($j * 2 + 1);
+        }
+        if ($f1 >= $j) {
+            $b1 = (int)($j * 2 + 1);
+        }
+        return new MapDecoration(0, $b2, $b0, $b1, $player->getName(), $color ?? new Color(255, 255, 255));
+    }
 }

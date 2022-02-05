@@ -28,8 +28,7 @@ declare(strict_types=1);
 
 namespace alvin0319\SimpleMapRenderer\util;
 
-use pocketmine\utils\Color;
-
+use pocketmine\color\Color;
 use function file_exists;
 use function imagecolorallocate;
 use function imagecreatefrompng;
@@ -39,7 +38,6 @@ use function imagefill;
 use function imagepng;
 use function imagesavealpha;
 use function pathinfo;
-
 use const PATHINFO_EXTENSION;
 
 class ImageUtil{

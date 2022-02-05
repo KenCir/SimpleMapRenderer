@@ -28,59 +28,67 @@ declare(strict_types=1);
 
 namespace alvin0319\SimpleMapRenderer\data;
 
+use JetBrains\PhpStorm\ArrayShape;
+use JetBrains\PhpStorm\Pure;
+use pocketmine\color\Color;
 use pocketmine\math\Vector3;
-use pocketmine\utils\Color;
-
 use function implode;
 
-final class MapData{
-	/** @var int */
-	protected $id;
-	/** @var Color[][] */
-	protected $colors = [];
-	/** @var bool */
-	protected $displayPlayers = false;
-	/** @var Vector3 */
-	protected $center;
+final class MapData
+{
 
-	public function __construct(int $id, array $colors, bool $displayPlayers, Vector3 $center){
-		$this->id = $id;
-		$this->colors = $colors;
-		$this->displayPlayers = $displayPlayers;
-		$this->center = $center;
-	}
+    protected int $id;
+    /** @var Color[][] */
+    protected array $colors = [];
+    protected bool $displayPlayers = false;
+    protected Vector3 $center;
 
-	public function getMapId() : int{
-		return $this->id;
-	}
+    public function __construct(int $id, array $colors, bool $displayPlayers, Vector3 $center)
+    {
+        $this->id = $id;
+        $this->colors = $colors;
+        $this->displayPlayers = $displayPlayers;
+        $this->center = $center;
+    }
 
-	/**
-	 * @param Color[][] $colors
-	 */
-	public function setColors(array $colors) : void{
-		$this->colors = $colors;
-	}
+    public function getMapId(): int
+    {
+        return $this->id;
+    }
 
-	/**
-	 * @return Color[][]
-	 */
-	public function getColors() : array{
-		return $this->colors;
-	}
+    /**
+     * @param Color[][] $colors
+     */
+    public function setColors(array $colors): void
+    {
+        $this->colors = $colors;
+    }
 
-	public function getDisplayPlayers() : bool{
-		return $this->displayPlayers;
-	}
+    /**
+     * @return Color[][]
+     */
+    public function getColors(): array
+    {
+        return $this->colors;
+    }
 
-	public function getCenter() : Vector3{
-		return $this->center;
-	}
+    public function getDisplayPlayers(): bool
+    {
+        return $this->displayPlayers;
+    }
 
-	public function jsonSerialize() : array{
-		return [
-			"id" => $this->id,
-			"displayPlayers" => $this->displayPlayers,
-			"center" => implode(":", [$this->center->getX(), $this->center->getY(), $this->center->getZ()])
-		];
-	}
+    public function getCenter(): Vector3
+    {
+        return $this->center;
+    }
+
+    #[Pure] #[ArrayShape(["id" => "int", "displayPlayers" => "bool", "center" => "string"])]
+    public function jsonSerialize(): array
+    {
+        return [
+            "id" => $this->id,
+            "displayPlayers" => $this->displayPlayers,
+            "center" => implode(":", [$this->center->getX(), $this->center->getY(), $this->center->getZ()])
+        ];
+    }
 }
