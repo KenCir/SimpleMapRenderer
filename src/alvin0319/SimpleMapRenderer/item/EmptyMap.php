@@ -62,7 +62,7 @@ class EmptyMap extends Item
                 $realX = $player->getPosition()->getFloorX() - 64 + $x;
                 $realY = $player->getPosition()->getFloorZ() - 64 + $y;
                 $maxY = $player->getWorld()->getHighestBlockAt($realX, $realY);
-                $block = $player->getWorld()->getBlockAt($realX, $maxY, $realY);
+                $block = $player->getWorld()->getBlockAt($realX, $maxY ?? 0, $realY);
                 $color = MapUtil::getMapColorByBlock($block);
                 $colors[$y][$x] = $color;
             }
