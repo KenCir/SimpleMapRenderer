@@ -41,12 +41,10 @@ use function mkdir;
 
 class SimpleMapRenderer extends PluginBase
 {
-    /** @var SimpleMapRenderer|null */
-    private static $instance = null;
-    /** @var MapFactory */
-    protected $mapFactory;
-    /** @var Config */
-    protected $config;
+
+    private static ?SimpleMapRenderer $instance = null;
+    protected MapFactory $mapFactory;
+    protected Config $config;
 
     public function onLoad(): void
     {
@@ -77,7 +75,7 @@ class SimpleMapRenderer extends PluginBase
             throw new PluginException("Another plugin is using the Map. Please disable other map-related plugins.");
         }
 
-        CreativeInventory::getInstance()->register(new EmptyMap());
+        CreativeInventory::getInstance()->add(new EmptyMap());
         //Item::addCreativeItem(new EmptyMap(2));
 
         $this->getServer()->getPluginManager()->registerEvents(new EventListener(), $this);
