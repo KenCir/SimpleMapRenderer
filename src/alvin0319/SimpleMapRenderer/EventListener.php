@@ -89,7 +89,6 @@ class EventListener implements Listener
         $item = $event->getPlayer()->getInventory()->getItemInHand();
         if (!$item instanceof FilledMap) return;
         if (($mapData = MapFactory::getInstance()->getMapData($item->getMapId())) !== null) {
-            var_dump("SEND");
             $this->sendMapInfo($event->getPlayer(), $item->getMapId(), $mapData, Server::getInstance()->getOnlinePlayers());
         }
     }
