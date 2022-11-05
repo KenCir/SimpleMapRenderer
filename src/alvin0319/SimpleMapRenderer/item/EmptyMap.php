@@ -33,44 +33,50 @@ use alvin0319\SimpleMapRenderer\MapFactory;
 use alvin0319\SimpleMapRenderer\util\MapUtil;
 use pocketmine\item\Item;
 use pocketmine\item\ItemFactory;
+use pocketmine\item\ItemIdentifier;
 use pocketmine\item\ItemIds;
+use pocketmine\item\ItemUseResult;
 use pocketmine\math\Vector3;
-use pocketmine\Player;
+use pocketmine\player\Player;
 
-class EmptyMap extends Item{
+class EmptyMap extends Item
+{
 
-	public const TYPE_EXPLORER_PLAYER = 2;
+    public const TYPE_EXPLORER_PLAYER = 2;
 
-	public function __construct(int $meta = 0){
-		parent::__construct(self::EMPTY_MAP, $meta, "Empty Map");
-	}
+    public function __construct(private int $meta = 0)
+    {
+        parent::__construct(new ItemIdentifier(ItemIds::EMPTY_MAP, $meta), "Empty Map");
+    }
 
-	public function onClickAir(Player $player, Vector3 $directionVector) : bool{
-		/** @var FilledMap $map */
-		$map = ItemFactory::get(ItemIds::FILLED_MAP, 0, 1);
-		$map->setDisplayPlayers($this->meta === self::TYPE_EXPLORER_PLAYER);
-		$map->setMapId(MapFactory::getInstance()->nextId());
+    public function onClickAir(Player $player, Vector3 $directionVector): ItemUseResult
+    {
+        /** @var FilledMap $map */
+        $map = ItemFactory::getInstance()->get(ItemIds::FILLED_MAP, 0, 1);
+        #$map->setDisplayPlayers($this->meta === self::TYPE_EXPLORER_PLAYER);
+        $map->setDisplayPlayers(true);
+        $map->setMapId(MapFactory::getInstance()->nextId());
 
-		$colors = [];
-		for($x = 0; $x < 128; $x++){
-			for($y = 0; $y < 128; $y++){
-				$realX = $player->getFloorX() - 64 + $x;
-				$realY = $player->getFloorZ() - 64 + $y;
-				$maxY = $player->getLevel()->getHighestBlockAt($realX, $realY);
-				$block = $player->getLevel()->getBlockAt($realX, $maxY, $realY);
-				$color = MapUtil::getMapColorByBlock($block);
-				$colors[$y][$x] = $color;
-			}
-		}
+        $colors = [];
+        for ($x = 0; $x < 128; $x++) {
+            for ($y = 0; $y < 128; $y++) {
+                $realX = $player->getPosition()->getFloorX() - 64 + $x;
+                $realY = $player->getPosition()->getFloorZ() - 64 + $y;
+                $maxY = $player->getWorld()->getHighestBlockAt($realX, $realY);
+                $block = $player->getWorld()->getBlockAt($realX, $maxY ?? 0, $realY);
+                $color = MapUtil::getMapColorByBlock($block);
+                $colors[$y][$x] = $color;
+            }
+        }
 
-		MapFactory::getInstance()->registerData(new MapData($map->getMapId(), $colors, $map->getDisplayPlayers(), $player->floor()));
+        MapFactory::getInstance()->registerData(new MapData($map->getMapId(), $colors, $map->getDisplayPlayers(), $player->getPosition()->floor()));
 
-		if($player->getInventory()->canAddItem($map)){
-			$player->getInventory()->addItem($map);
-		}else{
-			$player->getLevel()->dropItem($player->floor()->add(0.5, 0.5, 0.5), $map);
-		}
-		$this->pop();
-		return true;
-	}
+        if ($player->getInventory()->canAddItem($map)) {
+            $player->getInventory()->addItem($map);
+        } else {
+            $player->getWorld()->dropItem($player->getPosition()->floor()->add(0.5, 0.5, 0.5), $map);
+        }
+        $this->pop();
+        return ItemUseResult::SUCCESS();
+    }
 }

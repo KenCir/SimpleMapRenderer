@@ -30,63 +30,65 @@ namespace alvin0319\SimpleMapRenderer;
 
 use alvin0319\SimpleMapRenderer\item\EmptyMap;
 use alvin0319\SimpleMapRenderer\item\FilledMap;
-use pocketmine\item\Item;
+use pocketmine\inventory\CreativeInventory;
 use pocketmine\item\ItemFactory;
 use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\PluginException;
 use pocketmine\utils\Config;
-
 use RuntimeException;
-
 use function is_dir;
 use function mkdir;
 
-class SimpleMapRenderer extends PluginBase{
-	/** @var SimpleMapRenderer|null */
-	private static $instance = null;
-	/** @var MapFactory */
-	protected $mapFactory;
-	/** @var Config */
-	protected $config;
+class SimpleMapRenderer extends PluginBase
+{
 
-	public function onLoad() : void{
-		self::$instance = $this;
-	}
+    private static ?SimpleMapRenderer $instance = null;
+    protected MapFactory $mapFactory;
+    protected Config $config;
 
-	public static function getInstance() : SimpleMapRenderer{
-		return self::$instance;
-	}
+    public function onLoad(): void
+    {
+        self::$instance = $this;
+    }
 
-	public function onEnable() : void{
-		if(!is_dir($dir = $this->getDataFolder() . "images/")){
-			mkdir($dir);
-		}
-		if(!is_dir($dir = $this->getDataFolder() . "data/")){
-			mkdir($dir);
-		}
-		$this->saveResource("config.json");
-		$this->config = new Config($this->getDataFolder() . "config.json", Config::JSON);
-		$this->mapFactory = new MapFactory();
+    public static function getInstance(): SimpleMapRenderer
+    {
+        return self::$instance;
+    }
 
-		try{
-			ItemFactory::registerItem(new FilledMap());
-			ItemFactory::registerItem(new EmptyMap());
-		}catch(RuntimeException $e){
-			throw new PluginException("Another plugin is using the Map. Please disable other map-related plugins.");
-		}
+    public function onEnable(): void
+    {
+        if (!is_dir($dir = $this->getDataFolder() . "images/")) {
+            mkdir($dir);
+        }
+        if (!is_dir($dir = $this->getDataFolder() . "data/")) {
+            mkdir($dir);
+        }
+        $this->saveResource("config.json");
+        $this->config = new Config($this->getDataFolder() . "config.json", Config::JSON);
+        $this->mapFactory = new MapFactory();
 
-		Item::addCreativeItem(new EmptyMap());
-		//Item::addCreativeItem(new EmptyMap(2));
+        try {
+            ItemFactory::getInstance()->register(new FilledMap());
+            ItemFactory::getInstance()->register(new EmptyMap());
+        } catch (RuntimeException $e) {
+            throw new PluginException("Another plugin is using the Map. Please disable other map-related plugins.");
+        }
 
-		$this->getServer()->getPluginManager()->registerEvents(new EventListener(), $this);
-	}
+        CreativeInventory::getInstance()->add(new EmptyMap());
+        //Item::addCreativeItem(new EmptyMap(2));
 
-	public function onDisable() : void{
-		$this->mapFactory->save();
-		$this->getConfig()->save();
-	}
+        $this->getServer()->getPluginManager()->registerEvents(new EventListener(), $this);
+    }
 
-	public function getConfig() : Config{
-		return $this->config;
-	}
+    public function onDisable(): void
+    {
+        $this->mapFactory->save();
+        $this->getConfig()->save();
+    }
+
+    public function getConfig(): Config
+    {
+        return $this->config;
+    }
 }

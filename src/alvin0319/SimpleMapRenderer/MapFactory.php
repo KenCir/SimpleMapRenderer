@@ -31,9 +31,9 @@ namespace alvin0319\SimpleMapRenderer;
 use alvin0319\SimpleMapRenderer\data\MapData;
 use alvin0319\SimpleMapRenderer\task\MapImageFetchAsyncTask;
 use alvin0319\SimpleMapRenderer\util\ImageUtil;
+use FilesystemIterator;
 use pocketmine\math\Vector3;
 use RecursiveDirectoryIterator;
-
 use function explode;
 use function file_exists;
 use function file_get_contents;
@@ -44,50 +44,53 @@ use function json_encode;
 use function microtime;
 use function pathinfo;
 use function round;
-
 use const PATHINFO_FILENAME;
 
-final class MapFactory{
-	/** @var MapFactory|null */
-	private static $instance = null;
-	/** @var int */
-	protected $id = 0;
+final class MapFactory
+{
 
-	/** @var MapData[] */
-	protected $mapData = [];
 
-	public static function getInstance() : MapFactory{
-		return self::$instance;
-	}
+    private static MapFactory|null $instance = null;
+    protected int $id = 0;
 
-	public function __construct(){
-		self::$instance = $this;
-		$this->fetchAsyncTask();
-	}
+    /** @var MapData[] */
+    protected array $mapData = [];
 
-	public function fetchAsyncTask() : void{
-		$files = new RecursiveDirectoryIterator($dir = SimpleMapRenderer::getInstance()->getDataFolder() . "images/", RecursiveDirectoryIterator::SKIP_DOTS);
-		$res = [];
-		foreach($files as $file){
-			if($file->isFile()){
-				$fileName = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-				if(is_numeric($fileName)){
-					$res[(int) $fileName] = $dir . $file->getFilename();
-				}
-			}
-		}
-		SimpleMapRenderer::getInstance()->getServer()->getAsyncPool()->submitTask(new MapImageFetchAsyncTask($res));
-		$files = new RecursiveDirectoryIterator($dir = SimpleMapRenderer::getInstance()->getDataFolder() . "data/", RecursiveDirectoryIterator::SKIP_DOTS);
-		foreach($files as $file){
-			if($file->isFile()){
-				$fileData = pathinfo($file->getFilename());
-				if($fileData["extension"] === "json" && is_numeric($fileData["filename"])){
-					$data = json_decode(file_get_contents($dir . $fileData["filename"] . ".json"), true);
-					[$x, $y, $z] = explode(":", $data["center"]);
-					$mapData = new MapData($data["id"], [], $data["displayPlayers"], new Vector3((float) $x, (float) $y, (float) $z));
-					$this->mapData[$mapData->getMapId()] = $mapData;
-				}
-			}
+    public static function getInstance(): MapFactory
+    {
+        return self::$instance;
+    }
+
+    public function __construct()
+    {
+        self::$instance = $this;
+        $this->fetchAsyncTask();
+    }
+
+    public function fetchAsyncTask(): void
+    {
+        $files = new RecursiveDirectoryIterator($dir = SimpleMapRenderer::getInstance()->getDataFolder() . "images/", FilesystemIterator::SKIP_DOTS);
+        $res = [];
+        foreach ($files as $file) {
+            if ($file->isFile()) {
+                $fileName = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+                if (is_numeric($fileName)) {
+                    $res[(int)$fileName] = $dir . $file->getFilename();
+                }
+            }
+        }
+        SimpleMapRenderer::getInstance()->getServer()->getAsyncPool()->submitTask(new MapImageFetchAsyncTask($res));
+        $files = new RecursiveDirectoryIterator($dir = SimpleMapRenderer::getInstance()->getDataFolder() . "data/", FilesystemIterator::SKIP_DOTS);
+        foreach ($files as $file) {
+            if ($file->isFile()) {
+                $fileData = pathinfo($file->getFilename());
+                if ($fileData["extension"] === "json" && is_numeric($fileData["filename"])) {
+                    $data = json_decode(file_get_contents($dir . $fileData["filename"] . ".json"), true);
+                    [$x, $y, $z] = explode(":", $data["center"]);
+                    $mapData = new MapData($data["id"], [], $data["displayPlayers"], new Vector3((float)$x, (float)$y, (float)$z));
+                    $this->mapData[$mapData->getMapId()] = $mapData;
+                }
+            }
 		}
 		$this->id = SimpleMapRenderer::getInstance()->getConfig()->get("mapId", $this->id);
 	}
@@ -96,14 +99,14 @@ final class MapFactory{
 		SimpleMapRenderer::getInstance()->getConfig()->set("mapId", $this->id);
 		SimpleMapRenderer::getInstance()->getLogger()->notice("Saving images, It takes few seconds.");
 		$start = microtime(true);
-		foreach($this->mapData as $id => $data){
-			if(!file_exists($file = SimpleMapRenderer::getInstance()->getDataFolder() . "images/{$id}.png")){
-				ImageUtil::toPNG($file, $data->getColors());
-			}
-			if(!file_exists($file = SimpleMapRenderer::getInstance()->getDataFolder() . "data/{$id}.json")){
-				file_put_contents($file, json_encode($data->jsonSerialize()));
-			}
-		}
+		foreach($this->mapData as $id => $data) {
+            if (!file_exists($file = SimpleMapRenderer::getInstance()->getDataFolder() . "images/$id.png")) {
+                ImageUtil::toPNG($file, $data->getColors());
+            }
+            if (!file_exists($file = SimpleMapRenderer::getInstance()->getDataFolder() . "data/$id.json")) {
+                file_put_contents($file, json_encode($data->jsonSerialize()));
+            }
+        }
 		$end = microtime(true);
 		SimpleMapRenderer::getInstance()->getLogger()->notice("Image save successful (took " . round($end - $start, 2) . " ms)");
 	}

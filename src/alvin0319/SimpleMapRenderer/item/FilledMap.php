@@ -29,41 +29,51 @@ declare(strict_types=1);
 namespace alvin0319\SimpleMapRenderer\item;
 
 use pocketmine\item\Item;
+use pocketmine\item\ItemIdentifier;
+use pocketmine\item\ItemIds;
 
-class FilledMap extends Item{
+class FilledMap extends Item
+{
 
-	public const TAG_MAP_IS_SCALING = "map_is_scaling"; // TAG_Byte
-	public const TAG_MAP_SCALE = "map_scale"; // TAG_Byte
-	public const TAG_MAP_UUID = "map_uuid"; // TAG_Long
-	public const TAG_MAP_DISPLAY_PLAYERS = "map_display_players"; // TAG_Byte
-	public const TAG_MAP_NAME_INDEX = "map_name_index"; // TAG_Int
-	public const TAG_MAP_IS_INIT = "map_is_init"; // TAG_Byte
+    public const TAG_MAP_IS_SCALING = "map_is_scaling"; // TAG_Byte
+    public const TAG_MAP_SCALE = "map_scale"; // TAG_Byte
+    public const TAG_MAP_UUID = "map_uuid"; // TAG_Long
+    public const TAG_MAP_DISPLAY_PLAYERS = "map_display_players"; // TAG_Byte
+    public const TAG_MAP_NAME_INDEX = "map_name_index"; // TAG_Int
+    public const TAG_MAP_IS_INIT = "map_is_init"; // TAG_Byte
 
-	public function __construct(int $meta = 0){
-		parent::__construct(self::FILLED_MAP, $meta, "Filled Map");
-	}
+    public function __construct(int $meta = 0)
+    {
+        parent::__construct(new ItemIdentifier(ItemIds::FILLED_MAP, $meta), "Filled Map");
+    }
 
-	public function setDisplayPlayers(bool $displayPlayers) : void{
-		$this->getNamedTag()->setByte(self::TAG_MAP_DISPLAY_PLAYERS, (int) $displayPlayers);
-	}
+    public function setDisplayPlayers(bool $displayPlayers): void
+    {
+        $this->getNamedTag()->setByte(self::TAG_MAP_DISPLAY_PLAYERS, (int)$displayPlayers);
+    }
 
-	public function setIsScaling(bool $isScaling) : void{
-		$this->getNamedTag()->setByte(self::TAG_MAP_IS_SCALING, (int) $isScaling);
-	}
+    public function setIsScaling(bool $isScaling): void
+    {
+        $this->getNamedTag()->setByte(self::TAG_MAP_IS_SCALING, (int)$isScaling);
+    }
 
-	public function setMapId(int $id) : void{
-		$this->getNamedTag()->setLong(self::TAG_MAP_UUID, $id);
-	}
+    public function setMapId(int $id): void
+    {
+        $this->getNamedTag()->setLong(self::TAG_MAP_UUID, $id);
+    }
 
-	public function getMapId() : int{
-		return $this->getNamedTag()->getLong(self::TAG_MAP_UUID);
-	}
+    public function getMapId(): int
+    {
+        return $this->getNamedTag()->getLong(self::TAG_MAP_UUID);
+    }
 
-	public function getDisplayPlayers() : bool{
-		return (bool) $this->getNamedTag()->getByte(self::TAG_MAP_DISPLAY_PLAYERS);
-	}
+    public function getDisplayPlayers(): bool
+    {
+        return (bool)$this->getNamedTag()->getByte(self::TAG_MAP_DISPLAY_PLAYERS);
+    }
 
-	public function getIsScaling() : bool{
-		return (bool) $this->getNamedTag()->getByte(self::TAG_MAP_IS_SCALING);
-	}
+    public function getIsScaling(): bool
+    {
+        return (bool)$this->getNamedTag()->getByte(self::TAG_MAP_IS_SCALING);
+    }
 }
