@@ -1,0 +1,14 @@
+{
+  "name": "alvin0319/simplemaprenderer",
+  "description": "PocketMine-MP plugin",
+  "require": {
+    "pocketmine/pocketmine-mp": "4.0.*",
+    "ext-gd": "*"
+  },
+  "repositories": [
+    {
+      "type": "git",
+      "url": "https://github.com/pmmp/PocketMine-MP.git"
+    }
+  ]
+}
